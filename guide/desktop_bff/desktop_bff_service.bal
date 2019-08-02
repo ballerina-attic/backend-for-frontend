@@ -78,14 +78,14 @@ service desktop_bff_service on httpListener {
         json messageList = sendGetRequest(messageEP, "/message/list");
 
         // Generate the response from notification and message aggregation
-        json alertJson = {};
+        map<json> alertJson = {};
 
-        alertJson.Notifications = notificationList.Notifications;
-        alertJson.Messages = messageList.Messages;
+        alertJson["Notifications"] = checkpanic notificationList.Notifications;
+        alertJson["Messages"] = checkpanic messageList.Messages;
 
         // Set JSON payload to response
         http:Response response = new;
-        response.setJsonPayload(untaint alertJson);
+        response.setJsonPayload(<@untainted json> alertJson);
 
         // Send response to the client.
         checkpanic caller->respond(response);
@@ -103,12 +103,12 @@ service desktop_bff_service on httpListener {
         json appointmentList = sendGetRequest(appointmentEP, "/appointment/list");
 
         // Generate the response
-        json appointmentJson = {};
-        appointmentJson.Appointments = appointmentList.Appointments;
+        map<json> appointmentJson = {};
+        appointmentJson["Appointments"] = checkpanic appointmentList.Appointments;
 
         // Set JSON payload to response
         http:Response response = new();
-        response.setJsonPayload(untaint appointmentJson);
+        response.setJsonPayload(<@untainted json> appointmentJson);
 
         // Send response to the client.
         checkpanic caller->respond(response);
@@ -126,12 +126,12 @@ service desktop_bff_service on httpListener {
         json medicalRecordList = sendGetRequest(medicalRecordEP, "/medical-record/list");
 
         // Generate the response
-        json medicalRecordJson = {};
-        medicalRecordJson.MedicalRecords = medicalRecordList.MedicalRecords;
+        map<json> medicalRecordJson = {};
+        medicalRecordJson["MedicalRecords"] = checkpanic medicalRecordList.MedicalRecords;
 
         // Set JSON payload to response
         http:Response response = new();
-        response.setJsonPayload(untaint medicalRecordJson);
+        response.setJsonPayload(<@untainted json> medicalRecordJson);
 
         // Send response to the client.
         checkpanic caller->respond(response);

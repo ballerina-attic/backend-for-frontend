@@ -60,7 +60,7 @@ service notification_mgt_service on httpListener {
             // Create response message.
             json payload = { status: "Notification Created.", notificationId: notificationId };
             http:Response response = new();
-            response.setJsonPayload(untaint payload);
+            response.setJsonPayload(<@untainted json> payload);
 
             // Set 201 Created status code in the response message.
             response.statusCode = 201;
@@ -76,22 +76,24 @@ service notification_mgt_service on httpListener {
         path: "/notification/list"
     }
     resource function getNotifications(http:Caller caller, http:Request req) {
-
         log:printInfo("getNotifications...");
 
         http:Response response = new;
-        json notificationsResponse = { Notifications: [] };
+        map<json> notificationsResponse = { Notifications: [] };
 
         // Get all Notifications from map and add them to response
         int i = 0;
-        foreach var(k, v) in notificationMap {
-            json notificationValue = v.Notification;
-            notificationsResponse.Notifications[i] = notificationValue;
+        json[] notifications = [];
+        foreach var v in notificationMap {
+            json notificationValue = checkpanic v.Notification;
+            notifications[i] = notificationValue;
             i += 1;
         }
 
+        notificationsResponse["Notifications"] = notifications;
+
         // Set the JSON payload in the outgoing response message.
-        response.setJsonPayload(untaint notificationsResponse);
+        response.setJsonPayload(<@untainted json> notificationsResponse);
 
         // Send response to the client.
         checkpanic caller->respond(response);

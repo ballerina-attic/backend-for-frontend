@@ -74,14 +74,14 @@ service mobile_bff_service on httpListener {
         json unreadMessageList = sendGetRequest(messageEP, "/unread-message/list");
 
         // Aggregate the responses to a JSON
-        json profileJson = {};
-        profileJson.Appointments = appointmentList.Appointments;
-        profileJson.MedicalRecords = medicalRecordList.MedicalRecords;
-        profileJson.Messages = unreadMessageList.Messages;
+        map<json> profileJson = {};
+        profileJson["Appointments"] = checkpanic appointmentList.Appointments;
+        profileJson["MedicalRecords"] = checkpanic medicalRecordList.MedicalRecords;
+        profileJson["Messages"] = checkpanic unreadMessageList.Messages;
 
         // Set JSON payload to response
         http:Response response = new();
-        response.setJsonPayload(untaint profileJson);
+        response.setJsonPayload(<@untainted json> profileJson);
 
         // Send response to the client.
         checkpanic caller->respond(response);
@@ -96,7 +96,7 @@ function sendGetRequest(http:Client httpClient1, string context) returns (json) 
     http:Client client1 = httpClient1;
     var response = client1->get(context);
     json value = {};
-    
+
     if (response is http:Response) {
         var msg = response.getJsonPayload();
         if (msg is json) {
