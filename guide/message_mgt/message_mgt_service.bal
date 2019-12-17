@@ -61,7 +61,7 @@ service message_mgt_service on httpListener {
             // Create response message.
             json payload = { status: "Message Sent.", messageId: messageId };
             http:Response response = new();
-            response.setJsonPayload(untaint payload);
+            response.setJsonPayload(<@untainted json> payload);
 
             // Set 201 Created status code in the response message.
             response.statusCode = 201;
@@ -84,18 +84,19 @@ service message_mgt_service on httpListener {
         http:Response response = new;
 
         // Create a json array with Messages
-        json messageResponse = { Messages: [] };
-
+        map<json> messageResponse = { Messages: [] };
+        json[] messages = [];
         // Get all Messages from map and add them to response
         int i = 0;
-        foreach var (k, v) in messageMap {
-            json messageValue = v.Message;
-            messageResponse.Messages[i] = messageValue;
+        foreach var v in messageMap {
+            json messageValue = checkpanic v.Message;
+            messages[i] = messageValue;
             i += 1;
         }
+        messageResponse["Messages"] = messages;
 
         // Set the JSON payload in the outgoing response message.
-        response.setJsonPayload(untaint messageResponse);
+        response.setJsonPayload(<@untainted json> messageResponse);
 
         // Send response to the client.
         checkpanic caller->respond(response);
@@ -112,21 +113,24 @@ service message_mgt_service on httpListener {
         http:Response response = new;
 
         // Create a json array with Messages
-        json messageResponse = { Messages: [] };
+        map<json> messageResponse = { Messages: [] };
+        json[] messages = [];
 
         // Get all Messages from map and add them to response
         int i = 0;
-        foreach var(k, v) in messageMap {
-            json messageValue = v.Message;
+        foreach var v in messageMap {
+            json messageValue = checkpanic v.Message;
             string messageStatus = messageValue.Status.toString();
             if (messageStatus == "Unread"){
-                messageResponse.Messages[i] = messageValue;
+                messages[i] = messageValue;
                 i += 1;
             }
         }
 
+        messageResponse["Messages"] = messages;
+
         // Set the JSON payload in the outgoing response message.
-        response.setJsonPayload(untaint messageResponse);
+        response.setJsonPayload(<@untainted json> messageResponse);
 
         // Send response to the client.
         checkpanic caller->respond(response);

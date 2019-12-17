@@ -50,9 +50,7 @@ service appointment_mgt_service on httpListener {
         path: "/appointment"
     }
     resource function addAppointment(http:Caller caller, http:Request req) {
-
         log:printInfo("addAppointment...");
-
         var appointmentReq = req.getJsonPayload();
 
         if (appointmentReq is json) {
@@ -61,7 +59,7 @@ service appointment_mgt_service on httpListener {
             // Create response message.
             json payload = { status: "Appointment Created.", appointmentId: appointmentId };
             http:Response response = new();
-            response.setJsonPayload(untaint payload);
+            response.setJsonPayload(<@untainted json> payload);
 
             // Set 201 Created status code in the response message.
             response.statusCode = 201;
@@ -83,19 +81,23 @@ service appointment_mgt_service on httpListener {
         http:Response response = new;
 
         // Create a json array with Appointments
-        json appointmentsResponse = { Appointments: [] };
+        map<json> appointmentsResponse = { Appointments: [] };
 
         // Get all Appointments from map and add them to response
         int i = 0;
 
-        foreach var (k, v) in appointmentMap {
-            json appointmentValue = v.Appointment;
-            appointmentsResponse.Appointments[i] = appointmentValue;
+        json[] appointments = [];
+
+        foreach var v in appointmentMap {
+            json appointmentValue = checkpanic v.Appointment;
+            appointments[i] = appointmentValue;
             i += 1;
         }
 
+        appointmentsResponse["Appointments"] = appointments;
+
         // Set the JSON payload in the outgoing response message.
-        response.setJsonPayload(untaint appointmentsResponse);
+        response.setJsonPayload(<@untainted json> appointmentsResponse);
 
         // Send response to the client.
         checkpanic caller->respond(response);
